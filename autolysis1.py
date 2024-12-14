@@ -16,61 +16,47 @@ AIPROXY_TOKEN = os.getenv("AI_TOKEN")
 def load_data(file_path):
     """Load CSV data with encoding detection."""
     with open(file_path, 'rb') as f:
-        result = chardet.detect(f.read())
-    encoding = result['encoding']
+        encoding = chardet.detect(f.read())['encoding']
     return pd.read_csv(file_path, encoding=encoding)
 
 def analyze_data(df):
     """Perform basic data analysis."""
-    numeric_df = df.select_dtypes(include=['number'])  # Select only numeric columns
-    analysis = {
+    numeric_df = df.select_dtypes(include=['number'])
+    return {
         'summary': df.describe(include='all').to_dict(),
         'missing_values': df.isnull().sum().to_dict(),
-        'correlation': numeric_df.corr().to_dict()  # Compute correlation only on numeric columns
+        'correlation': numeric_df.corr().to_dict()
     }
-    return analysis
 
 def visualize_data(df):
     """Generate and save visualizations."""
     sns.set(style="whitegrid")
-    numeric_columns = df.select_dtypes(include=['number']).columns
-    for column in numeric_columns:
-        plt.figure()
-        sns.histplot(df[column].dropna(), kde=True)
-        plt.title(f'Distribution of {column}')
-        plt.savefig(f'{column}_distribution.png')
+    for column in df.select_dtypes(include=['number']).columns:
+        sns.histplot(df[column].dropna(), kde=True).set_title(f'Distribution of {column}')
+        plt.savefig(f'{column}_distribution.png', dpi=80)  # Reduce dpi to speed up saving
         plt.close()
 
 def generate_narrative(analysis):
     """Generate narrative using LLM."""
-    headers = {
-        'Authorization': f'Bearer {AIPROXY_TOKEN}',
-        'Content-Type': 'application/json'
-    }
-    prompt = f"Provide a detailed analysis based on the following data summary: {analysis}"
+    headers = {'Authorization': f'Bearer {AIPROXY_TOKEN}', 'Content-Type': 'application/json'}
     data = {
         "model": "gpt-4o-mini",
-        "messages": [{"role": "user", "content": prompt}]
+        "messages": [{"role": "user", "content": f"Provide a detailed analysis based on the following data summary: {analysis}"}]
     }
     try:
-        response = httpx.post(API_URL, headers=headers, json=data, timeout=30.0)
+        response = httpx.post(API_URL, headers=headers, json=data, timeout=20.0)  # Reduced timeout
         response.raise_for_status()
         return response.json()['choices'][0]['message']['content']
-    except httpx.HTTPStatusError as e:
-        print(f"HTTP error occurred: {e}")
-    except httpx.RequestError as e:
-        print(f"Request error occurred: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-    return "Narrative generation failed due to an error."
+        print(f"An error occurred: {e}")
+        return "Narrative generation failed due to an error."
 
 def main(file_path):
     df = load_data(file_path)
     analysis = analyze_data(df)
     visualize_data(df)
-    narrative = generate_narrative(analysis)
     with open('README.md', 'w') as f:
-        f.write(narrative)
+        f.write(generate_narrative(analysis))
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
