@@ -1,5 +1,21 @@
-import matplotlib
-matplotlib.use('Agg')  # Use the Agg backend for non-interactive plotting
+# /// script
+# requires-python = ">=3.9"
+# dependencies = [
+#   "pandas",
+#   "seaborn",
+#   "matplotlib",
+#   "numpy",
+#   "scipy",
+#   "openai",
+#   "scikit-learn",
+#   "requests",
+#   "httpx",
+#   "chardet"
+# ]
+# ///
+
+#import matplotlib
+#matplotlib.use('Agg')  # Use the Agg backend for non-interactive plotting
 
 import os
 import sys
