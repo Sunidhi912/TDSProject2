@@ -1,17 +1,3 @@
-# /// script
-# requires-python = ">=3.9"
-# dependencies = [
-#   "pandas",
-#   "seaborn",
-#   "matplotlib",
-#   "numpy",
-#   "scipy",
-#   "openai",
-#   "scikit-learn",
-#   "requests",
-#   "ipykernel",  # Added ipykernel
-# ]
-# ///
 import matplotlib
 matplotlib.use('Agg')  # Use the Agg backend for non-interactive plotting
 
